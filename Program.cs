@@ -1,46 +1,36 @@
-using System;
-using System.Runtime.InteropServices;
-using System.Text;
+using Spectre.Console;
 
-class Program
-{
-    [DllImport("libc", SetLastError = true)]
-    static extern int write(int fd, byte[] buf, int count);
+class Program{
+    static void Main(){
+        AnsiConsole.Write(new FigletText("Hello, World!").Centered());
+        AnsiConsole.Write(new FigletText("First GUI").LeftJustified().Color(Color.Blue));
 
-    const int STDOUT_FILENO = 1;
-    const int STDERR_FILENO = 2;
+        var choice = AnsiConsole.Prompt(
+            new SelectionPrompt<string>().Title("Choose your destiny").PageSize(10).AddChoices(new[]{"Be a good person","Be a bad person","Be a neutral person, but be careful not to get caught with your own actions","If you choose to be a bad person, you will be punished by the law","If you choose to be a good person, you will be rewarded by the law","If you choose to be a neutral person, you will be left alone"}).UseConverter(choice => choice.ToUpperInvariant()));
+    
 
-    static void Main()
-    {
-        MyWriteLine("Hello Wolrd");
-        MyWriteLine("This is written from scratch");
-        MyWriteLine("No Console.WriteLine used here!");
-
-
-        MyWrite("This doesn't add a newline:");
-        MyWriteLine("But this does!");
-
-
-        MyWriteLineError("This goes to error output!");
+    switch(choice){
+        case "Be a good person":
+        AnsiConsole.Write(new Markup("[green]You are a good person[/]"));
+        break;
+        case "Be a bad person":
+        AnsiConsole.Write(new Markup("[red]You are a bad person[/]"));
+        break;
+        case "Be a neutral person, but be careful not to get caught with your own actions":
+        AnsiConsole.Write(new Markup("[yellow]You are a neutral person, but be careful not to get caught with your own actions[/]"));
+        break;
+        case "If you choose to be a bad person, you will be punished by the law":
+        AnsiConsole.Write(new Markup("[red]You are a bad person, and you will be punished by the law[/]"));
+        break;
+        case "If you choose to be a good person, you will be rewarded by the law":
+        AnsiConsole.Write(new Markup("[green]You are a good person, and you will be rewarded by the law[/]"));
+        break;
+        case "If you choose to be a neutral person, you will be left alone":
+        AnsiConsole.Write(new Markup("[yellow]You are a neutral person, and you will be left alone[/]"));
+        break;
+        default:
+        AnsiConsole.Write(new Markup("[red]Invalid choice[/]"));
+        break;
     }
-    static void MyWriteLine(string text)
-    {
-        MyWrite(text + "\n");
-    }
-    static void MyWrite(string text)
-    {
-        byte[] bytes = Encoding.UTF8.GetBytes(text);
-        int result = write(STDOUT_FILENO, bytes, bytes.Length);
-        if (result == -1)
-        {
-            throw new InvalidOperationException("Failed to write to stdout");
-        }
-
-
-    }
-    static void MyWriteLineError(string text)
-    {
-        byte[] bytes = Encoding.UTF8.GetBytes(text + "\n");
-        write(STDERR_FILENO, bytes, bytes.Length);
     }
 }
