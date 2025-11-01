@@ -1,142 +1,151 @@
-# MyFirstApp - Custom Console I/O Library
+# MyFirstApp - Interactive Console GUI
 
-A .NET 8.0 console application demonstrating low-level system programming through Platform Invoke (P/Invoke) by implementing custom console I/O operations using direct POSIX system calls.
+A .NET 8.0 console application featuring a beautiful terminal-based user interface built with Spectre.Console, demonstrating modern console UI capabilities with interactive menus and styled text output.
 
 ## Project Overview
 
-This project consists of two components:
+This project showcases the power of Spectre.Console library to create rich, interactive terminal applications with:
+- ASCII art banner text (FigletText)
+- Colored and styled text output
+- Interactive selection prompts
+- Modern terminal UI/UX
 
-1. **MyConsoleLibrary** - A reusable class library providing custom console I/O functions
-2. **MyFirstApp** - A demonstration console application utilizing the library
+## Features
 
-The project showcases how to bypass the standard .NET `Console` class and interact directly with the operating system's file descriptors using P/Invoke to call native `libc` functions.
+### Visual Elements
+- **FigletText Banners**: Large ASCII art text for eye-catching headers
+- **Centered and Left-Justified Text**: Flexible text alignment options
+- **Color Support**: Blue, green, red, and yellow text styling
+- **Markup Language**: Rich text formatting with Spectre.Console markup syntax
 
-## Architecture
+### Interactive Menu
+An interactive selection prompt allowing users to choose their character alignment:
+- Be a good person
+- Be a bad person
+- Be a neutral person
+- Multiple outcome scenarios with conditional feedback
 
-### Project Structure
+The application responds to user choices with appropriately colored feedback messages.
 
-```
-MyFirstApp/
-├── MyFirstApp.csproj              # Main console application project
-├── Program.cs                     # Application entry point
-├── MyConsoleLibrary/              # Reusable class library
-│   ├── MyConsoleLibrary.csproj    # Library project file
-│   └── ConsoleWriter.cs           # Custom I/O implementation
-└── README.md
-```
+## Technology Stack
 
-### MyConsoleLibrary - Core Implementation
-
-The `ConsoleWriter` class provides three static methods for console output:
-
-#### Methods
-
-**`MyWrite(string text)`**
-- Writes text directly to stdout (file descriptor 1) without adding a newline
-- Uses UTF-8 encoding for cross-platform text compatibility
-- Throws `InvalidOperationException` if the write operation fails
-- Useful for inline output or building output progressively
-
-**`MyWriteLine(string text)`**
-- Writes text to stdout with automatic newline handling
-- Prepends and appends a newline character to ensure output starts on a fresh line
-- Ideal for complete message output that should always appear on its own line
-- Internally calls `MyWrite()` with `"\n" + text + "\n"`
-
-**`MyWriteLineError(string text)`**
-- Writes text directly to stderr (file descriptor 2) with a trailing newline
-- Used for error messages and diagnostic output
-- Separates error output from standard output stream
-
-#### Technical Implementation
-
-```csharp
-[DllImport("libc", SetLastError = true)]
-private static extern int write(int fd, byte[] buf, int count);
-
-private const int STDOUT_FILENO = 1;
-private const int STDERR_FILENO = 2;
-```
-
-The library uses P/Invoke to call the POSIX `write()` system call directly:
-- **File Descriptors**: Uses standard UNIX file descriptors (1 for stdout, 2 for stderr)
-- **Encoding**: Converts .NET strings to UTF-8 byte arrays before writing
-- **Error Handling**: Checks return values and throws exceptions on failure
-- **Platform**: Requires POSIX-compliant systems (macOS, Linux)
+- **.NET 8.0** - Latest LTS version of .NET
+- **C#** - Modern C# with implicit usings enabled
+- **Spectre.Console 0.53.0** - Terminal UI library for rich console applications
 
 ## Getting Started
 
 ### Prerequisites
 
 - **.NET 8.0 SDK** or later
-- **macOS or Linux** (POSIX-compliant system with `libc`)
-- **Visual Studio Code** or any .NET-compatible IDE (optional)
+- A modern terminal with ANSI color support (macOS Terminal, iTerm2, Windows Terminal, etc.)
+- **Terminal must be interactive** (not redirected or piped)
 
-### Building the Project
+### Installation
 
+1. Clone the repository:
 ```bash
-# Clone or navigate to the project directory
+git clone <your-repo-url>
 cd MyFirstApp
+```
 
-# Restore dependencies and build
+2. Restore dependencies:
+```bash
+dotnet restore
+```
+
+3. Build the project:
+```bash
 dotnet build
-
-# Build in Release mode
-dotnet build -c Release
 ```
 
 ### Running the Application
 
 ```bash
-# Run directly
 dotnet run
+```
 
-# Or execute the compiled binary
+Or run the compiled executable directly:
+```bash
 ./bin/Debug/net8.0/MyFirstApp
 ```
 
 ### Expected Output
 
-```
-Writing to stdout
-No newline
-But this is a newline
-This is the standard console output
-Writing to stderr
-This is the standard console error
-```
+When you run the application, you'll see:
 
-Note: stderr output may appear in a different order depending on your terminal's buffer handling.
+1. A centered ASCII art banner displaying "Hello, World!"
+2. A blue, left-justified ASCII art text displaying "First GUI"
+3. An interactive menu with multiple choices
+4. Colored feedback based on your selection:
+   - **Green**: Good person choices
+   - **Red**: Bad person choices
+   - **Yellow**: Neutral person choices
 
-## Usage Examples
+## Code Structure
 
-### Basic Usage
-
-```csharp
-using MyConsoleLibrary;
-
-// Write without newline
-ConsoleWriter.MyWrite("Processing");
-ConsoleWriter.MyWrite("...");
-ConsoleWriter.MyWrite("Done!");
-
-// Write with automatic newline
-ConsoleWriter.MyWriteLine("Task completed successfully");
-
-// Write errors to stderr
-ConsoleWriter.MyWriteLineError("Warning: Configuration not found");
-```
-
-### Comparing with Standard Console
+### Program.cs
 
 ```csharp
-// Standard .NET Console
-Console.Write("Hello");          // High-level, buffered
-Console.WriteLine("World");      
+using Spectre.Console;
 
-// MyConsoleLibrary - Direct system calls
-ConsoleWriter.MyWrite("Hello");  // Low-level, direct to file descriptor
-ConsoleWriter.MyWriteLine("World");
+class Program{
+    static void Main(){
+        // Display ASCII art banners
+        AnsiConsole.Write(new FigletText("Hello, World!").Centered());
+        AnsiConsole.Write(new FigletText("First GUI").LeftJustified().Color(Color.Blue));
+
+        // Interactive selection prompt
+        var choice = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("Choose your destiny")
+                .PageSize(10)
+                .AddChoices(new[]{...})
+                .UseConverter(choice => choice.ToUpperInvariant())
+        );
+    
+        // Switch statement for user feedback
+        switch(choice){
+            case "Be a good person":
+                AnsiConsole.Write(new Markup("[green]You are a good person[/]"));
+                break;
+            // ... more cases
+        }
+    }
+}
+```
+
+## Spectre.Console Key Concepts
+
+### FigletText
+Creates large ASCII art text from regular strings. Supports various fonts and styles.
+
+```csharp
+new FigletText("Text")
+    .Centered()           // Center alignment
+    .LeftJustified()      // Left alignment
+    .Color(Color.Blue)    // Text color
+```
+
+### SelectionPrompt
+Creates interactive menus where users can navigate with arrow keys and select with Enter.
+
+```csharp
+var choice = AnsiConsole.Prompt(
+    new SelectionPrompt<string>()
+        .Title("Menu Title")
+        .PageSize(10)
+        .AddChoices(choices)
+);
+```
+
+### Markup
+Allows inline styling of text using a simple markup syntax.
+
+```csharp
+AnsiConsole.Write(new Markup("[green]Success![/]"));
+AnsiConsole.Write(new Markup("[red]Error![/]"));
+AnsiConsole.Write(new Markup("[yellow]Warning![/]"));
 ```
 
 ## Project Configuration
@@ -145,10 +154,6 @@ ConsoleWriter.MyWriteLine("World");
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup>
-    <ProjectReference Include="MyConsoleLibrary\MyConsoleLibrary.csproj" />
-  </ItemGroup>
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -156,136 +161,122 @@ ConsoleWriter.MyWriteLine("World");
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <!-- Prevent duplicate type conflicts -->
   <ItemGroup>
-    <Compile Remove="MyConsoleLibrary/**/*.cs" />
+    <PackageReference Include="Spectre.Console" Version="0.53.0" />
   </ItemGroup>
 </Project>
 ```
 
-The `Compile Remove` directive ensures that source files in the `MyConsoleLibrary` subdirectory are not compiled directly into the main project, preventing type conflicts since they're already referenced as a project dependency.
-
-## Key Concepts Demonstrated
-
-### 1. Platform Invoke (P/Invoke)
-Direct interop with native C libraries from managed .NET code using `[DllImport]` attributes.
-
-### 2. POSIX File Descriptors
-Working with standard UNIX file descriptors:
-- `0` - stdin (not used in this project)
-- `1` - stdout (standard output)
-- `2` - stderr (standard error)
-
-### 3. Class Library Design
-Separation of concerns by extracting reusable functionality into a dedicated library project.
-
-### 4. Static Utility Classes
-Using static classes for stateless utility functions that don't require instantiation.
-
-### 5. UTF-8 Text Encoding
-Proper text encoding when interfacing between .NET strings and byte-level system calls.
-
-## Limitations & Considerations
-
-### Platform Compatibility
-- **Supported**: macOS, Linux, and other POSIX-compliant systems
-- **Not Supported**: Windows (requires different P/Invoke declarations for `kernel32.dll`)
-
-To add Windows support, implement conditional compilation:
-```csharp
-#if WINDOWS
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern bool WriteFile(IntPtr hFile, byte[] lpBuffer, 
-        uint nNumberOfBytesToWrite, out uint lpNumberOfBytesWritten, IntPtr lpOverlapped);
-#else
-    [DllImport("libc", SetLastError = true)]
-    private static extern int write(int fd, byte[] buf, int count);
-#endif
-```
-
-### Performance Characteristics
-- **Direct system calls** bypass .NET's buffering mechanism
-- May be slower for small, frequent writes compared to buffered I/O
-- Useful for understanding low-level I/O, but `Console.Write` is generally preferred for production code
-
-### Error Handling
-- `MyWrite()` throws exceptions on write failures
-- `MyWriteLineError()` currently does not check return values (intentional for this demo)
-- In production code, all system calls should have proper error handling
-
-## Development Notes
-
-### Why This Approach?
-
-This project is primarily educational, demonstrating:
-- How .NET interoperates with native code
-- What happens "under the hood" when you call `Console.WriteLine()`
-- The difference between managed and unmanaged code boundaries
-
-For production applications, prefer using the standard `Console` class unless you have specific requirements for direct file descriptor manipulation.
-
-### Extending the Library
-
-To add more functionality:
-
-```csharp
-// Reading from stdin
-[DllImport("libc", SetLastError = true)]
-private static extern int read(int fd, byte[] buf, int count);
-
-public static string MyReadLine()
-{
-    byte[] buffer = new byte[1024];
-    int bytesRead = read(0, buffer, buffer.Length);
-    return Encoding.UTF8.GetString(buffer, 0, bytesRead);
-}
-```
-
 ## Building for Distribution
+
+### Debug Build
+```bash
+dotnet build
+```
+
+### Release Build
+```bash
+dotnet build -c Release
+```
 
 ### Self-Contained Deployment (macOS)
 ```bash
 dotnet publish -c Release -r osx-x64 --self-contained
 ```
 
-### Framework-Dependent Deployment
+### Self-Contained Deployment (Windows)
 ```bash
-dotnet publish -c Release
+dotnet publish -c Release -r win-x64 --self-contained
 ```
 
-The output will be in `bin/Release/net8.0/publish/`
+### Self-Contained Deployment (Linux)
+```bash
+dotnet publish -c Release -r linux-x64 --self-contained
+```
+
+The output will be in `bin/Release/net8.0/<runtime>/publish/`
 
 ## Troubleshooting
 
-### Build Errors
+### "Terminal is not interactive" Error
+This error occurs when the terminal doesn't support interactive input (e.g., when output is redirected).
+
+**Solution**: Run the application directly in a terminal, not through pipes or redirects:
+```bash
+# ✅ Good
+dotnet run
+
+# ❌ Bad
+echo "" | dotnet run
+dotnet run > output.txt
+```
+
+### Colors Not Displaying
+If colors aren't showing, ensure your terminal supports ANSI escape codes. Modern terminals like:
+- macOS Terminal
+- iTerm2
+- Windows Terminal
+- Visual Studio Code integrated terminal
+
+all support colors by default.
+
+### Build Errors After Git Pull
+If you encounter build errors after pulling changes:
+
 ```bash
 # Clean and rebuild
 dotnet clean
+rm -rf bin obj
 dotnet build
 ```
 
-### Type Conflict Warnings
-Ensure the `<Compile Remove>` directive is present in `MyFirstApp.csproj` to prevent the build system from compiling library source files twice.
+## Extending the Application
 
-### Runtime Errors on Write
-- Verify you're running on a POSIX-compliant system
-- Check that `libc` is available (standard on macOS/Linux)
-- Ensure proper permissions for console output
+### Adding More Menu Options
 
-## Contributing
+```csharp
+var choice = AnsiConsole.Prompt(
+    new SelectionPrompt<string>()
+        .Title("Choose your destiny")
+        .AddChoices(new[]{
+            "Option 1",
+            "Option 2",
+            "New Option Here"  // Add new options
+        })
+);
+```
 
-This is a learning project, but improvements are welcome:
-- Add Windows support via conditional compilation
-- Implement input methods (reading from stdin)
-- Add buffering for performance optimization
-- Create unit tests using mocking frameworks
+### Adding More Visual Elements
+
+Spectre.Console supports many other components:
+- **Tables**: Display data in tabular format
+- **Progress Bars**: Show progress for long-running operations
+- **Trees**: Display hierarchical data
+- **Panels**: Add bordered sections
+- **Charts**: Display bar charts
+
+Example:
+```csharp
+var table = new Table();
+table.AddColumn("Name");
+table.AddColumn("Value");
+table.AddRow("Setting 1", "Enabled");
+AnsiConsole.Write(table);
+```
+
+## Resources
+
+- [Spectre.Console Documentation](https://spectreconsole.net/)
+- [Spectre.Console GitHub](https://github.com/spectreconsole/spectre.console)
+- [.NET 8.0 Documentation](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-8)
 
 ## License
 
-This is an educational project. Feel free to use and modify as needed.
+This is an educational project demonstrating Spectre.Console capabilities.
 
 ---
 
-**Author**: Built as a demonstration of P/Invoke and low-level system programming in .NET  
-**Target Framework**: .NET 8.0  
-**Platform**: POSIX-compliant systems (macOS, Linux)
+**Author**: Learning project for terminal UI development in .NET  
+**Framework**: .NET 8.0  
+**UI Library**: Spectre.Console 0.53.0  
+**Platform**: Cross-platform (Windows, macOS, Linux)
